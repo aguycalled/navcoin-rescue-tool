@@ -162,6 +162,13 @@ after removing and re-importing a phrase. Every case is now a test in
   reproduces it needs minutes of load, so it was not added; a regression
   would show as an intermittent `Dexie-encrypted can't find its encryption
 table` in a wallet-creation error.
+- **`daemon survives purge then re-import of same private key` flaked once**
+  (`test/daemon.test.js`), reported in PR #12 on 2026-11-07: on
+  `ubuntu-24.04-arm`, the `fs.rm(root, { recursive: true })` in the test's
+  `finally` failed with `ENOTEMPTY`, and a rerun passed. Not reproduced here.
+  Guess, unverified: something was still writing into `root` while the
+  recursive delete ran, which `waitForExit` on the daemon should rule out
+  unless a file is written after the process reports exit.
 - Removing a source mid-setup now logs
   `[electrum] connection setup stopped by the wallet closing: …` — expected,
   not a fault.
@@ -227,7 +234,7 @@ published. `gh run rerun --failed` got it out.
 
 Each platform downloads its runtime with a single unretried call
 (`Invoke-WebRequest` on Windows, `curl` elsewhere). A retry with backoff
-around those four would turn a blip into a slower build instead of a
+around each of them would turn a blip into a slower build instead of a
 failed release. Not done here because it changes the release workflow,
 which only a tag exercises — so it cannot be verified without cutting
 one.
@@ -270,5 +277,5 @@ users actually run is still covered on the current OS.
   needs webkit2gtk on Linux just to compile.
 - A tagless `workflow_dispatch` of `Release` builds and smoke-tests without
   publishing. Considered and rejected: running the full build + smoke matrix on
-  every PR, which would add four platform builds of the Tauri app to every
+  every PR, which would add a Tauri app build per release platform to every
   push.
